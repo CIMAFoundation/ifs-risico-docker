@@ -1,0 +1,7 @@
+dist/*
+data/*
+src/adapter/.venv/*
+data
+.DS_Store
+**/.ipynb_checkpoints
+**/__pycache__
