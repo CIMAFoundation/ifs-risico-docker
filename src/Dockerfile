@@ -35,11 +35,11 @@ RUN chmod +x RISICO2015
 ADD ./adapter.tgz .
 WORKDIR /home/risico/adapter
 RUN pip install -r requirements.txt
-# 
-# WORKDIR /home/risico/
-# ADD --chown=risico run_risico.sh .
-# RUN chmod +x run_risico.sh
-# 
-# 
-# WORKDIR /home/risico/
-# ENTRYPOINT ["/home/risico/run_risico.sh"]
+ 
+WORKDIR /home/risico/
+ADD --chown=risico run_risico.sh .
+RUN chmod +x run_risico.sh
+
+
+WORKDIR /home/risico/
+ENTRYPOINT ["/home/risico/run_risico.sh"]
