@@ -5,7 +5,7 @@ RUN pwd
 LABEL maintainer="Mirko D'Andrea"
 LABEL email="mirko.dandrea@cimafoundation.org"
 LABEL version="1.0.0"
-LABEL release_date="2020/01/13"
+LABEL release_date="2020/05/28"
 
 # change default shell (from sh to bash)
 SHELL ["/bin/bash", "-c"]
