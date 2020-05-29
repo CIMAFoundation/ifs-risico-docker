@@ -86,7 +86,7 @@ if __name__ == '__main__':
     }
 
     nc_files = list(map(
-        lambda f: input_dir + f,
+        lambda f: path.join(input_dir, f),
         sorted(list(filter(
             lambda s: s.endswith('.grb') or s.endswith('.grib'), listdir(input_dir)
     )))))
@@ -99,7 +99,9 @@ if __name__ == '__main__':
 
     with open(file_list_file, 'w') as file_list:
         for f in nc_files:
-            ds = xr.open_dataset(f, engine='cfgrib')
+            try:
+                ds = xr.open_dataset(f, engine='cfgrib')
+            except: continue
             for v in ds.variables:
                 if grid is None or interp_indexes is None:
                     print('interpolating grid')
@@ -123,6 +125,7 @@ if __name__ == '__main__':
                             out_file = f'{output_dir}/{out_date_str}_IFS_D.zbin'
                             write_gzip_binary(out_file, wd_values, grid)
                             file_list.write(path.abspath(out_file) + '\n')
+            
 
 
 

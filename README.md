@@ -18,7 +18,7 @@ To build the image, after you clone the repo locally, run the ```build.sh``` she
 ## Run RISICO
 
 * Create a ```data``` folder in the host machine
-* Copy the WRF output to the ```data/ifs```
+* Copy the IFS output to the ```data/ifs```
 * Run the model in your host, replacing ```/path/to/data/```with the absolute path of the data directory and 
 ```RUNDATE``` in YYYYMMDDHHMM format (HH and MM should be 0000).
 ```bash

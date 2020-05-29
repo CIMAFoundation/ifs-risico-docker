@@ -2,8 +2,6 @@
 
 echo "Container args: $@"
 
-# docker run -v /Volumes/data-sd/docker/wrf-02072018_00UTC/wrf/:/home/risico/wrf risico/builder
-
 if [ "$#" -eq 1 ]; then
   RUN_DATE=$1
 else
@@ -12,9 +10,13 @@ fi
 
 cd /home/risico/
 export PYTHONPATH=$PYTHONPATH:/home/risico/adapter/
-echo "Convert WRF files"
-adapter/.venv/bin/python adapter/importer.py data/ifs/ input/ input_files.txt
+echo "Convert IFS files"
+python3 adapter/importer.py data/ifs/ input/ input_files.txt
 echo "Run RISICO"
 ./RISICO2015 $RUN_DATE risico/configuration.txt input_files.txt
-echo "Export file"
-adapter/.venv/bin/python adapter/exporter.py risico/OUTPUT/ data/output/risico_$RUN_DATE.nc data/output/risico_aggr_$RUN_DATE.nc
+mkdir -p data/output
+RISICO_OUTPUT="data/output/risico_$RUN_DATE.nc"
+RISICO_AGGR_OUTPUT="data/output/risico_aggr_$RUN_DATE.nc"
+echo "Export files: $RISICO_OUTPUT $RISICO_AGGR_OUTPUT"
+
+python3 adapter/exporter.py risico/OUTPUT/ $RISICO_OUTPUT $RISICO_AGGR_OUTPUT
