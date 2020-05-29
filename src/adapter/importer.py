@@ -88,7 +88,7 @@ if __name__ == '__main__':
     nc_files = list(map(
         lambda f: input_dir + f,
         sorted(list(filter(
-            lambda s: s.endswith('.grb'), listdir(input_dir)
+            lambda s: s.endswith('.grb') or s.endswith('.grib'), listdir(input_dir)
     )))))
 
 
@@ -105,18 +105,18 @@ if __name__ == '__main__':
                     print('interpolating grid')
                     grid, interp_indexes, index_filter = generate_interp(ds)
                 if v in vars_risico:
-                    print(f'Reading {v} from {f}')                    
+                    print(f'Reading {v} from {f}')
                     var_risico = vars_risico[v]
                     for idx, step in progressbar(enumerate(ds.step)):
                         date_np = step.valid_time.values
                         date = datetime.utcfromtimestamp(date_np.tolist()/1e9)
-                        out_date_str = date.strftime('%Y%m%d%H%M')               
+                        out_date_str = date.strftime('%Y%m%d%H%M')
                         out_file = f'{output_dir}/{out_date_str}_IFS_{var_risico}.zbin'
 
                         values = ds[v].values[idx, :]
                         interp_values = values[index_filter][interp_indexes]
                         write_gzip_binary(out_file, interp_values, grid)
-                        file_list.write(path.abspath(out_file) + '\n')                            
+                        file_list.write(path.abspath(out_file) + '\n')
 
                         if var_risico == 'W':
                             wd_values = np.zeros_like(interp_values)
