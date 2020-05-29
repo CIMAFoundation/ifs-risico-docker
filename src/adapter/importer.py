@@ -88,7 +88,7 @@ if __name__ == '__main__':
     nc_files = list(map(
         lambda f: path.join(input_dir, f),
         sorted(list(filter(
-            lambda s: s.endswith('.grb') or s.endswith('.grib'), listdir(input_dir)
+            lambda s: (s.endswith('.grb') or s.endswith('.grib')) and not s.startswith('._'), listdir(input_dir)
     )))))
 
 

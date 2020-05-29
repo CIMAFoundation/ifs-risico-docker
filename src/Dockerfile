@@ -44,4 +44,4 @@ RUN chmod +x run_risico.sh
 
 
 WORKDIR /home/risico/
-# ENTRYPOINT ["/home/risico/run_risico.sh"]
+ENTRYPOINT ["/home/risico/run_risico.sh"]
