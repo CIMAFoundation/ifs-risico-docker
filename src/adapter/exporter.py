@@ -11,23 +11,29 @@ from datetime import timedelta
 
 
 from functools import partial
-def perc_mean(dataset, axis=0, perc=50, inverse=False):
-    threshold = np.percentile(dataset, [perc], axis).squeeze()
+
+
+def quant_mean(dataset, quant, dim='time', inverse=False):
+    threshold = dataset.quantile([quant], dim=dim)
     if inverse:
-        perc_data = dataset.where(dataset < threshold).mean(axis=0)
+        perc_data = dataset.where(dataset <= threshold).mean(dim=dim)
     else:
-        perc_data = dataset.where(dataset >= threshold).mean(axis=0)
+        perc_data = dataset.where(dataset >= threshold).mean(dim=dim)
     return perc_data
+
+
 
 data_min = partial(xr.DataArray.min, dim='time')
 data_mean = partial(xr.DataArray.mean, dim='time')
 data_max = partial(xr.DataArray.max, dim='time')
-perc50_mean = partial(perc_mean, perc=50)
-perc75_mean = partial(perc_mean, perc=75)
-perc90_mean = partial(perc_mean, perc=90)
-perc10_inv_mean = partial(perc_mean, perc=10)
-perc25_inv_mean = partial(perc_mean, perc=25)
-perc50_inv_mean = partial(perc_mean, perc=50)
+
+perc50_mean = partial(quant_mean, quant=0.50)
+perc75_mean = partial(quant_mean, quant=0.75)
+perc90_mean = partial(quant_mean, quant=0.90)
+
+perc10_inv_mean = partial(quant_mean, quant=0.1, inverse=True)
+perc25_inv_mean = partial(quant_mean, quant=0.25, inverse=True)
+perc50_inv_mean = partial(quant_mean, quant=0.50, inverse=True)
 
 ext_names = {
     'W': 'W',
