@@ -11,7 +11,7 @@ MODELNAME=RISICO
 STATO0=/home/risico/risico/STATE0/state0RISICO_
 
 %Cells definition file for the model
-CELLE=/home/risico/risico/STATIC/world.txt
+CELLE=/home/risico/risico/STATIC/region.txt
 VEG=/home/risico/risico/STATIC/pveg_world.csv
 OUTPUTHRES=1
 
@@ -26,7 +26,7 @@ BUFFERS=/home/risico/risico/BUFFERS/
 
 %MODEL=MODEL_ID:NOMEDB:SPOOLPATH:GRID:FORMAT
 %Output file format. Can be BIN (binary) ZBIN (Gzipped binary), TXT (ascii), GEOTIF, ESRIGRD, SURFERGRD
-MODEL=RISICO:RISICO:/home/risico/risico/OUTPUT/:/home/risico/risico/GRID/RISICOGRID.txt:ZBIN
+MODEL=RISICO:RISICO:/home/risico/risico/OUTPUT/:/home/risico/risico/GRID/GRID.txt:ZBIN
 %VARIABLE=MODEL_ID:NOME:NOMEDB:STORESTRATEGY:PRECISION
 
 VARIABLE=RISICO:V:V:MAX:0

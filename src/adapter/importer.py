@@ -11,6 +11,46 @@ from utils.grid import Grid
 
 from scipy.interpolate import griddata
 
+def adapt_grid_file(grid):
+    full_grid = Grid.from_file('risico/GRID/GRID_TEMPLATE.txt')
+    print(full_grid.lats.shape, full_grid.lats.max(), full_grid.lats.min())
+    print(full_grid.lons.shape, full_grid.lons.max(), full_grid.lons.min())
+    
+    dlon = (full_grid.lons.max() - full_grid.lons.min())/full_grid.lons.shape[1]
+    dlat = (full_grid.lats.max() - full_grid.lats.min())/full_grid.lats.shape[0]
+
+    print(dlon, dlat)
+
+    MINLON, MAXLON = grid.lons.min(), grid.lons.max()
+    MINLAT, MAXLAT = grid.lats.min(), grid.lats.max()
+
+    NROWS = int(round((MAXLAT-MINLAT)/dlat) + 1)
+    NCOLS = int(round((MAXLON-MINLON)/dlon) + 1)
+    
+    grid_string = \
+    f'''GRIDREG=true
+MINLON={MINLON}
+MAXLON={MAXLON}
+MINLAT={MINLAT}
+MAXLAT={MAXLAT}
+GRIDNCOLS={NCOLS}
+GRIDNROWS={NROWS}
+'''
+
+    with open('risico/GRID/GRID.txt', 'w') as f:
+        f.write(grid_string)
+    
+
+def configure_risico(grid):
+    cells = np.loadtxt('risico/STATIC/world.txt')
+    lat, lon = cells[:,1], cells[:,0]
+    min_lon, max_lon = grid.lons.min(), grid.lons.max()
+    min_lat, max_lat = grid.lats.min(), grid.lats.max()
+    selected_cells = cells[(lon>=min_lon)&(lon<=max_lon)&(lat>=min_lat)&(lat<=max_lat), :]
+    np.savetxt('risico/STATIC/region.txt', selected_cells, fmt=['%.8f','%.8f','%.8f','%.8f','%d'])
+
+
+
 
 def roll_grid(interp_lons, interp_lats, interp_indexes):
      # find the first element where the longitude is over 180
@@ -101,7 +141,10 @@ if __name__ == '__main__':
         for f in nc_files:
             try:
                 ds = xr.open_dataset(f, engine='cfgrib')
-            except: continue
+            except Exception as exp:
+                print(exp)
+                print('skipping file ', f)
+                continue
             for v in ds.variables:
                 if grid is None or interp_indexes is None:
                     print('interpolating grid')
@@ -125,7 +168,9 @@ if __name__ == '__main__':
                             out_file = f'{output_dir}/{out_date_str}_IFS_D.zbin'
                             write_gzip_binary(out_file, wd_values, grid)
                             file_list.write(path.abspath(out_file) + '\n')
-            
+
+    configure_risico(grid)
+    adapt_grid_file(grid)
 
 
 

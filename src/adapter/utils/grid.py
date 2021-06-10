@@ -54,6 +54,31 @@ class Grid:
 
         return g
 
+    @staticmethod
+    def from_file(filename):
+        grid_dict = {}
+        with open(filename, 'r') as file:
+            for line in file.readlines():
+                line = line.rstrip('\n')
+
+                if line.startswith('%') or line.startswith('#') or line.strip()=='':
+                    #comment
+                    continue
+
+                key, value = line.split('=')
+
+                grid_dict[key] = value
+
+        grid = Grid.regular(
+            float(grid_dict['MINLAT'].replace('f','')),
+            float(grid_dict['MAXLAT'].replace('f','')),
+            float(grid_dict['MINLON'].replace('f','')),
+            float(grid_dict['MAXLON'].replace('f','')),
+            int(grid_dict['GRIDNROWS']),
+            int(grid_dict['GRIDNCOLS'])
+        )
+        return grid
+
     def __build_cache(self):
 
         assert Grid.model_points is not None, 'set model points before using this function. Grid.set_model_points'
@@ -126,4 +151,6 @@ class Grid:
                          values, output_linear)
 
         return output_values
+
+
 
