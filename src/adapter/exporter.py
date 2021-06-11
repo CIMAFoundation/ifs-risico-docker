@@ -39,7 +39,12 @@ ext_names = {
     'W': 'W',
     'V': 'ROS',
     'I': 'I',
-    'UMB': 'FFM'
+    'UMB': 'FFM',
+    
+    #'rain': 'rain',
+    #'temperature': 'temperature',
+    #'humidity':'humidity',
+    #'windSpeed':'windSpeed'
 }
 
 variables = [
@@ -86,7 +91,7 @@ if __name__ == '__main__':
             model, model_date, date_ref, variable = f.split('_')
             variable = variable.replace('.zbin','')
 
-            if variable not in ['UMB', 'V', 'I', 'W']: continue
+            if variable not in ext_names.keys(): continue
 
             if variable not in outputs:
                 outputs[variable] = []

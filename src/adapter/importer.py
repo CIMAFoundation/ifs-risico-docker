@@ -1,28 +1,28 @@
 #!/usr/bin/env python
+import os
+import sys
+from datetime import datetime
+from os import listdir, makedirs, path
+from shutil import copyfile
+
+import numpy as np
 import xarray as xr
 from progressbar import progressbar
-import numpy as np
-
-import sys
-from os import path, makedirs, listdir
-from datetime import datetime
-from utils.zbin import read_gzip_binary, write_gzip_binary
-from utils.grid import Grid
-
 from scipy.interpolate import griddata
 
-def adapt_grid_file(grid):
-    full_grid = Grid.from_file('risico/GRID/GRID_TEMPLATE.txt')
-    print(full_grid.lats.shape, full_grid.lats.max(), full_grid.lats.min())
-    print(full_grid.lons.shape, full_grid.lons.max(), full_grid.lons.min())
-    
-    dlon = (full_grid.lons.max() - full_grid.lons.min())/full_grid.lons.shape[1]
-    dlat = (full_grid.lats.max() - full_grid.lats.min())/full_grid.lats.shape[0]
+from utils.grid import Grid
+from utils.zbin import read_gzip_binary, write_gzip_binary
 
-    print(dlon, dlat)
 
-    MINLON, MAXLON = grid.lons.min(), grid.lons.max()
-    MINLAT, MAXLAT = grid.lats.min(), grid.lats.max()
+def adapt_grid_file(selected_cells):
+    lons, lats = selected_cells[:,0], selected_cells[:,1]
+    MINLON, MAXLON = lons.min(), lons.max()
+    MINLAT, MAXLAT = lats.min(), lats.max()
+
+    diff_lons = abs(np.diff(lons))
+    diff_lats = abs(np.diff(lats))
+    dlon = diff_lons[diff_lons>0].min()
+    dlat = diff_lats[diff_lats>0].min()
 
     NROWS = int(round((MAXLAT-MINLAT)/dlat) + 1)
     NCOLS = int(round((MAXLON-MINLON)/dlon) + 1)
@@ -41,13 +41,14 @@ GRIDNROWS={NROWS}
         f.write(grid_string)
     
 
-def configure_risico(grid):
-    cells = np.loadtxt('risico/STATIC/world.txt')
+def configure_risico(grid, cells_file):
+    cells = np.loadtxt(cells_file)
     lat, lon = cells[:,1], cells[:,0]
     min_lon, max_lon = grid.lons.min(), grid.lons.max()
     min_lat, max_lat = grid.lats.min(), grid.lats.max()
     selected_cells = cells[(lon>=min_lon)&(lon<=max_lon)&(lat>=min_lat)&(lat<=max_lat), :]
     np.savetxt('risico/STATIC/region.txt', selected_cells, fmt=['%.8f','%.8f','%.8f','%.8f','%d'])
+    return selected_cells
 
 
 
@@ -105,6 +106,7 @@ def generate_interp(ds, lat_bounds=(-56.9, 83.6)):
 
 
 if __name__ == '__main__':
+    print(sys.argv)
     # ifs files
     input_dir = sys.argv[1]
     # risico input files
@@ -112,6 +114,10 @@ if __name__ == '__main__':
     # list of input files
     file_list_file = sys.argv[3]
 
+    cells_file = os.environ.get('CELLS_FILE', 'risico/STATIC/world.txt')
+    veg_file = os.environ.get('PVEG_FILE', 'risico/STATIC/pveg_world.csv')
+    copyfile(veg_file, 'risico/STATIC/pveg.csv')
+    
     makedirs(output_dir, exist_ok=True)
     input_file_dir = path.dirname(file_list_file)
     if input_file_dir != '':
@@ -169,8 +175,8 @@ if __name__ == '__main__':
                             write_gzip_binary(out_file, wd_values, grid)
                             file_list.write(path.abspath(out_file) + '\n')
 
-    configure_risico(grid)
-    adapt_grid_file(grid)
+    selected_cells = configure_risico(grid, cells_file)
+    adapt_grid_file(selected_cells)
 
 
 

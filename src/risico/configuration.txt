@@ -12,7 +12,7 @@ STATO0=/home/risico/risico/STATE0/state0RISICO_
 
 %Cells definition file for the model
 CELLE=/home/risico/risico/STATIC/region.txt
-VEG=/home/risico/risico/STATIC/pveg_world.csv
+VEG=/home/risico/risico/STATIC/pveg.csv
 OUTPUTHRES=1
 
 %do not use the Temperature Contribution calculating Fire Spread
@@ -33,5 +33,15 @@ VARIABLE=RISICO:V:V:MAX:0
 VARIABLE=RISICO:I:I:MAX:0
 VARIABLE=RISICO:dffm:UMB:MIN:-1
 VARIABLE=RISICO:W:W:MAX:-2
+
+VARIABLE=RISICO:V:V:MAX:0
+VARIABLE=RISICO:I:I:MAX:0
+VARIABLE=RISICO:dffm:UMB:MIN:-1
+VARIABLE=RISICO:W:W:MAX:-2
+
+VARIABLE=RISICO:windSpeed:windSpeed:MAX:-2
+VARIABLE=RISICO:temperature:temperature:MAX:-2
+VARIABLE=RISICO:humidity:humidity:MIN:-2
+VARIABLE=RISICO:rain:rain:MIN:-2
 
 
