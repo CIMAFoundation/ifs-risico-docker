@@ -37,8 +37,7 @@ Example script:
     --env RISICO_RUN_DATE=201908170000 \
     --env CELLS_FILE=data/static/region.txt \
     --env PVEG_FILE=data/static/pveg.txt \
-    risico-ifs \
-    $RUNDATE
+    risico-ifs
 ```
 
 The output of the RISICO model will be placed in the data/output directory
