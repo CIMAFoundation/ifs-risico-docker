@@ -18,13 +18,27 @@ To build the image, after you clone the repo locally, run the ```build.sh``` she
 ## Run RISICO
 
 * Create a ```data``` folder in the host machine
-* Copy the IFS output to the ```data/ifs```
-* Run the model in your host, replacing ```/path/to/data/```with the absolute path of the data directory and 
-```RUNDATE``` in YYYYMMDDHHMM format (HH and MM should be 0000).
+* Copy the IFS output to the ```data/ifs``` directory
+* Optionally copy the static files to the ```data/static``` directory
+* Run the model in your host, replacing ```/path/to/data/```with the absolute path of the data directory
+* pass the following environmental variable:
+    
+    *RISICO_RUN_DATE* in YYYYMMDDHHMM format (HH and MM should be 0000).
+    
+    *CELLS_FILE* optional cells definition file (lon, lat, aspect, slope, veg_type)
+    
+    *PVEG_FILE* optional vegetation file (see _src/risico/pveg_world.csv_ for reference)
+  
+
+Example script:
 ```bash
   docker run  -it \
     -v /path/to/data/:/home/risico/data \
+    --env RISICO_RUN_DATE=201908170000 \
+    --env CELLS_FILE=data/static/region.txt \
+    --env PVEG_FILE=data/static/pveg.txt \
     risico-ifs \
     $RUNDATE
 ```
-* the output of the RISICO model will be placed in the data/output directory
+
+The output of the RISICO model will be placed in the data/output directory
