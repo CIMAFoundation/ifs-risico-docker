@@ -129,6 +129,7 @@ if __name__ == '__main__':
      'u10': 'W',
      'tp': 'P', 
      'd2m': 'H',
+     'sd': 'SNOW'
     }
 
     nc_files = list(map(
