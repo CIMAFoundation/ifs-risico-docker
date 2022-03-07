@@ -1,5 +1,5 @@
 # start from base -- builder
-FROM continuumio/miniconda3 as builder
+FROM ubuntu:18.04 as builder
 RUN pwd
 # label(s)
 LABEL maintainer="Mirko D'Andrea"
@@ -12,6 +12,7 @@ SHELL ["/bin/bash", "-c"]
 
 # install system-wide deps 
 RUN apt-get update
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get install -y \
 	build-essential \
 	libpng-dev \
@@ -20,15 +21,23 @@ RUN apt-get install -y \
 	libjpeg-dev \
 	libz-dev \
 	libc6-dev \
+	libhdf5-dev \
 	bash-completion \
+	wget \
 	nano
+
+ENV CONDA_DIR /opt/conda
+RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh 
+RUN /bin/bash ~/miniconda.sh -b -p /opt/conda
+ENV PATH=$CONDA_DIR/bin:$PATH
 
 RUN useradd -m -p fp -s /bin/bash risico
 WORKDIR /home/risico/
 
-RUN conda install -c conda-forge eccodes
+RUN conda install -y -c conda-forge python=3 xarray netCDF4 numpy scipy eccodes pandas
+
 ADD ./requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
 ADD ./risico.tgz .
 ADD --chown=risico RISICO2015 .

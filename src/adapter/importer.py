@@ -129,7 +129,12 @@ if __name__ == '__main__':
      'u10': 'W',
      'tp': 'P', 
      'd2m': 'H',
-     'sd': 'SNOW'
+     'sd': 'SNOW',
+     '2_metre_temperature_surface': 'T',
+     '10_metre_U_wind_component_surface': 'W',
+     'Total_precipitation_surface': 'P',
+     '2_metre_dewpoint_temperature_surface': 'H',
+     'Snow_depth_surface': 'SNOW'
     }
 
     nc_files = list(map(
@@ -138,43 +143,47 @@ if __name__ == '__main__':
             lambda s: (s.endswith('.grb') or s.endswith('.grib')) and not s.startswith('._'), listdir(input_dir)
     )))))
 
-
+    print('found grib files', nc_files)
 
     grid, interp_indexes, index_filter = None, None, None
 
-
-
     with open(file_list_file, 'w') as file_list:
         for f in nc_files:
+            print('reading file ', f)
+
             try:
                 ds = xr.open_dataset(f, engine='cfgrib')
             except Exception as exp:
                 print(exp)
                 print('skipping file ', f)
                 continue
+
             for v in ds.variables:
                 if grid is None or interp_indexes is None:
                     print('interpolating grid')
                     grid, interp_indexes, index_filter = generate_interp(ds)
-                if v in vars_risico:
-                    print(f'Reading {v} from {f}')
-                    var_risico = vars_risico[v]
-                    for idx, step in progressbar(enumerate(ds.step)):
-                        date_np = step.valid_time.values
-                        date = datetime.utcfromtimestamp(date_np.tolist()/1e9)
-                        out_date_str = date.strftime('%Y%m%d%H%M')
-                        out_file = f'{output_dir}/{out_date_str}_IFS_{var_risico}.zbin'
 
-                        values = ds[v].values[idx, :]
-                        interp_values = values[index_filter][interp_indexes]
-                        write_gzip_binary(out_file, interp_values, grid)
+                if v not in vars_risico:
+                    continue
+
+                print(f'Reading {v} from {f}')
+                var_risico = vars_risico[v]
+                for idx, step in progressbar(enumerate(ds.step)):
+                    date_np = step.valid_time.values
+                    date = datetime.utcfromtimestamp(date_np.tolist()/1e9)
+                    out_date_str = date.strftime('%Y%m%d%H%M')
+                    
+                    out_file = f'{output_dir}/{out_date_str}_IFS_{var_risico}.zbin'
+                    values = ds[v].values[idx, :]
+                    interp_values = values[index_filter][interp_indexes]
+                    write_gzip_binary(out_file, interp_values, grid)
+                    file_list.write(path.abspath(out_file) + '\n')
+
+                    if var_risico == 'W':
+                        wd_values = np.zeros_like(interp_values)
+                        out_file = f'{output_dir}/{out_date_str}_IFS_D.zbin'
+                        write_gzip_binary(out_file, wd_values, grid)
                         file_list.write(path.abspath(out_file) + '\n')
-
-                        if var_risico == 'W':
-                            wd_values = np.zeros_like(interp_values)
-                            out_file = f'{output_dir}/{out_date_str}_IFS_D.zbin'
-                            write_gzip_binary(out_file, wd_values, grid)
-                            file_list.write(path.abspath(out_file) + '\n')
 
     selected_cells = configure_risico(grid, cells_file)
     adapt_grid_file(selected_cells)
