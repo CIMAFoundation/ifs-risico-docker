@@ -8,5 +8,5 @@ cp src/run_risico.sh dist/run_risico.sh
 cp src/Dockerfile dist/Dockerfile
 pushd .
 cd dist
-docker build -t risico-ifs .
+docker build -t risico-hyds .
 popd

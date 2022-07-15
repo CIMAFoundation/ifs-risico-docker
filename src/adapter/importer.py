@@ -56,7 +56,12 @@ def configure_risico(grid, cells_file):
 def roll_grid(interp_lons, interp_lats, interp_indexes):
      # find the first element where the longitude is over 180
 
-    roll_point = np.where(interp_lons[0,:]>=180)[0][0]
+
+    roll_point = np.where(interp_lons[0, :] >= 180)
+    if len(roll_point[0]) == 0:
+        return interp_lons, interp_lats, interp_indexes
+
+    roll_point = roll_point[0][0]
 
     interp_lons_ = np.concatenate((
         interp_lons[:, roll_point:]-360, 
@@ -78,8 +83,9 @@ def roll_grid(interp_lons, interp_lats, interp_indexes):
     return interp_lons_, interp_lats_, interp_indexes_
 
 def generate_interp(ds, lat_bounds=(-56.9, 83.6)):
-    lons = ds.longitude.values[:]
-    lats = ds.latitude.values[:]
+    lons = ds.lon.values[:]
+    lats = ds.lat.values[:]
+    lons, lats = np.meshgrid(lons, lats)
 
     lat_bounds_min, lat_bounds_max = lat_bounds
     index_filter = (lats<=lat_bounds_max) & (lats>=lat_bounds_min)
@@ -125,25 +131,20 @@ if __name__ == '__main__':
 
 
     vars_risico = {
-     't2m': 'T',
-     'u10': 'W',
-     'tp': 'P', 
-     'd2m': 'H',
-     'sd': 'SNOW',
-     '2_metre_temperature_surface': 'T',
-     '10_metre_U_wind_component_surface': 'W',
-     'Total_precipitation_surface': 'P',
-     '2_metre_dewpoint_temperature_surface': 'H',
-     'Snow_depth_surface': 'SNOW'
+     'temperature': 'T',
+     'relative_humidity': 'H',
+     '10m_u_wind_component': 'U',
+     '10m_v_wind_component': 'V',
+     'total_precipitation': 'P'
     }
 
     nc_files = list(map(
         lambda f: path.join(input_dir, f),
         sorted(list(filter(
-            lambda s: (s.endswith('.grb') or s.endswith('.grib')) and not s.startswith('._'), listdir(input_dir)
+            lambda s: (s.endswith('.nc')) and not s.startswith('._'), listdir(input_dir)
     )))))
 
-    print('found grib files', nc_files)
+    print('found nc files', nc_files)
 
     grid, interp_indexes, index_filter = None, None, None
 
@@ -152,7 +153,7 @@ if __name__ == '__main__':
             print('reading file ', f)
 
             try:
-                ds = xr.open_dataset(f, engine='cfgrib')
+                ds = xr.open_dataset(f)
             except Exception as exp:
                 print(exp)
                 print('skipping file ', f)
@@ -168,13 +169,12 @@ if __name__ == '__main__':
 
                 print(f'Reading {v} from {f}')
                 var_risico = vars_risico[v]
-                for idx, step in progressbar(enumerate(ds.step)):
-                    date_np = step.valid_time.values
-                    date = datetime.utcfromtimestamp(date_np.tolist()/1e9)
+                for idx, time in progressbar(enumerate(ds.time.values)):
+                    date = datetime.utcfromtimestamp(time.tolist()/1e9)
                     out_date_str = date.strftime('%Y%m%d%H%M')
                     
                     out_file = f'{output_dir}/{out_date_str}_IFS_{var_risico}.zbin'
-                    values = ds[v].values[idx, :]
+                    values = ds[v].sel(time=time).values[0,:,:]
                     interp_values = values[index_filter][interp_indexes]
                     write_gzip_binary(out_file, interp_values, grid)
                     file_list.write(path.abspath(out_file) + '\n')
