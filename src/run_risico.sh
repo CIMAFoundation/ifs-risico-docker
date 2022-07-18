@@ -13,7 +13,7 @@ fi
 cd /home/risico/
 export PYTHONPATH=$PYTHONPATH:/home/risico/adapter/
 echo "Convert IFS files"
-python3 adapter/importer.py data/ifs/ input/ input_files.txt $CELLS_FILE
+python3 adapter/importer.py data/ifs/ input/ input_files.txt
 
 echo "Run RISICO"
 ./RISICO2015 $RUN_DATE risico/configuration.txt input_files.txt

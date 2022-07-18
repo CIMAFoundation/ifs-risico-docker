@@ -82,33 +82,13 @@ def roll_grid(interp_lons, interp_lats, interp_indexes):
     ))
     return interp_lons_, interp_lats_, interp_indexes_
 
-def generate_interp(ds, lat_bounds=(-56.9, 83.6)):
+def generate_grid(ds):
     lons = ds.lon.values[:]
-    lats = ds.lat.values[:]
+    lats = np.flip(ds.lat.values[:])
     lons, lats = np.meshgrid(lons, lats)
-
-    lat_bounds_min, lat_bounds_max = lat_bounds
-    index_filter = (lats<=lat_bounds_max) & (lats>=lat_bounds_min)
-    lats = lats[index_filter]
-    lons = lons[index_filter]
-
-    diff_lons = np.diff(lons)
-    diff_lats = np.diff(lats)
-
-    d_lon, d_lat = np.min(np.abs(diff_lons[diff_lons!=0])), np.min(np.abs(diff_lats[diff_lats!=0]))
-    d_lon = min(d_lon, d_lat)
-    d_lat = d_lon
-    lon_min, lat_min, lon_max, lat_max = lons.min(), lats.min(), lons.max(), lats.max()
-    interp_lons, interp_lats = np.meshgrid(np.arange(lon_min, lon_max, d_lon), np.arange(lat_max, lat_min, -d_lat))
+    grid = Grid(lats, lons, regular=True)
     
-    points = np.array((lons, lats)).T
-    values_index = np.arange(points.shape[0], dtype='int')
-    interp_indexes = griddata(points, values_index, (interp_lons, interp_lats), method='nearest')
-
-    interp_lons, interp_lats, interp_indexes = roll_grid(interp_lons, interp_lats, interp_indexes)
-    grid = Grid(interp_lats, interp_lons, regular=True)
-    
-    return grid, interp_indexes, index_filter
+    return grid
 
 
 if __name__ == '__main__':
@@ -160,12 +140,11 @@ if __name__ == '__main__':
                 continue
 
             for v in ds.variables:
-                if grid is None or interp_indexes is None:
-                    print('interpolating grid')
-                    grid, interp_indexes, index_filter = generate_interp(ds)
-
                 if v not in vars_risico:
                     continue
+
+                if grid is None:
+                    grid = generate_grid(ds)
 
                 print(f'Reading {v} from {f}')
                 var_risico = vars_risico[v]
@@ -175,12 +154,13 @@ if __name__ == '__main__':
                     
                     out_file = f'{output_dir}/{out_date_str}_IFS_{var_risico}.zbin'
                     values = ds[v].sel(time=time).values[0,:,:]
-                    interp_values = values[index_filter][interp_indexes]
-                    write_gzip_binary(out_file, interp_values, grid)
+                    values = np.flipud(values)
+                    
+                    write_gzip_binary(out_file, values, grid)
                     file_list.write(path.abspath(out_file) + '\n')
 
                     if var_risico == 'W':
-                        wd_values = np.zeros_like(interp_values)
+                        wd_values = np.zeros_like(values)
                         out_file = f'{output_dir}/{out_date_str}_IFS_D.zbin'
                         write_gzip_binary(out_file, wd_values, grid)
                         file_list.write(path.abspath(out_file) + '\n')
